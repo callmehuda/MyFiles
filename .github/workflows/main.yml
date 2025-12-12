@@ -30,7 +30,7 @@ jobs:
       - name: Setup Cloudflared
         run: |
           #sudo cloudflared service install eyJhIjoiOWFjMWUxOTExMmU5ZWZmZDIzNmFlNDk1NDIyYmY2ZjgiLCJ0IjoiOTFhZjIzOWQtMDA1My00YjhhLWE2ZTItYjFkODhhNGU3YWM0IiwicyI6Ik1ETTROekZqTWpBdE5EazJZUzAwTTJZekxUbGtOVGd0WWpCbFltWXhNMk5tTVdFMSJ9
-          cloudflared tunnel run --token eyJhIjoiOWFjMWUxOTExMmU5ZWZmZDIzNmFlNDk1NDIyYmY2ZjgiLCJ0IjoiZDBiMjI1MTItNmE1OC00MmZkLTk5MTMtNzYxMjczYWUzN2YwIiwicyI6Ik5qRmhZalU0Wm1RdE1HUTNNUzAwTlRKaExUa3lNbVF0TUROak16TXpOakJsWXpNeiJ9
+          cloudflared tunnel run --token eyJhIjoiOWFjMWUxOTExMmU5ZWZmZDIzNmFlNDk1NDIyYmY2ZjgiLCJ0IjoiZDBiMjI1MTItNmE1OC00MmZkLTk5MTMtNzYxMjczYWUzN2YwIiwicyI6Ik5qRmhZalU0Wm1RdE1HUTNNUzAwTlRKaExUa3lNbVF0TUROak16TXpOakJsWXpNeiJ9 &
 
       - name: Tambah User cihuyy
         run: |
