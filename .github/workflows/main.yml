@@ -32,11 +32,11 @@ jobs:
           #sudo cloudflared service install eyJhIjoiOWFjMWUxOTExMmU5ZWZmZDIzNmFlNDk1NDIyYmY2ZjgiLCJ0IjoiOTFhZjIzOWQtMDA1My00YjhhLWE2ZTItYjFkODhhNGU3YWM0IiwicyI6Ik1ETTROekZqTWpBdE5EazJZUzAwTTJZekxUbGtOVGd0WWpCbFltWXhNMk5tTVdFMSJ9
           cloudflared tunnel run --token eyJhIjoiOWFjMWUxOTExMmU5ZWZmZDIzNmFlNDk1NDIyYmY2ZjgiLCJ0IjoiZDBiMjI1MTItNmE1OC00MmZkLTk5MTMtNzYxMjczYWUzN2YwIiwicyI6Ik5qRmhZalU0Wm1RdE1HUTNNUzAwTlRKaExUa3lNbVF0TUROak16TXpOakJsWXpNeiJ9 &
 
-      - name: Tambah User cihuyy
+      - name: Run Filebrowser
         run: |
-          mkdir Server
+          mkdir -p Server
           curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
-          filebrowser -r Server --auth.method noauth
+          filebrowser -r Server --noauth --username huda
         timeout-minutes: 300
         continue-on-error: true
       - name: Save to GitHub
