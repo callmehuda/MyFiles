@@ -15,6 +15,10 @@ jobs:
   run-script:
     runs-on: ubuntu-latest
     steps:
+      - name: clone repo locally
+        uses: actions/checkout@v4
+        
+
       - name: Install Cloudflared
         run: |       
           # Add cloudflare gpg key
