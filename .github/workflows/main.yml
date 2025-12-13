@@ -40,7 +40,7 @@ jobs:
         run: |
           mkdir -p Server
           curl -fsSL https://raw.githubusercontent.com/filebrowser/get/master/get.sh | bash
-          filebrowser -r Server --noauth --username huda
+          filebrowser
         timeout-minutes: 240
         continue-on-error: true
       - name: Save to GitHub
