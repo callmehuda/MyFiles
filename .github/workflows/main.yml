@@ -2,7 +2,7 @@ name: FileServer
 
 on:
   schedule:
-    - cron: "30 */4 * * *"  
+    - cron: "0 */4 * * *"  
   workflow_dispatch:        
   push:
     branches:
@@ -38,8 +38,13 @@ jobs:
 
       - name: Run sshd
         run: |
-          sudo apt install openssh-server -y
-          sudo service ssh start
+          sudo apt install openssh-server -y        
+          # echo 'runner:ll' | sudo chpasswd
+          echo -e "Port 22\nListenAddress 0.0.0.0" | sudo tee /etc/ssh/sshd_config
+          sudo ssh-keygen -A
+          sudo mkdir -p /run/sshd
+          sudo chmod 755 /run/sshd
+          sudo /usr/sbin/sshd &
           
       - name: Run Filebrowser
         run: |
