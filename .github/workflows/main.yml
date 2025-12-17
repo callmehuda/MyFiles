@@ -39,7 +39,7 @@ jobs:
       - name: Run sshd
         run: |
           sudo apt install openssh-server -y        
-          # echo 'runner:ll' | sudo chpasswd
+          echo 'runner:mypasswd' | sudo chpasswd
           echo -e "Port 22\nListenAddress 0.0.0.0" | sudo tee /etc/ssh/sshd_config
           sudo ssh-keygen -A
           sudo mkdir -p /run/sshd
