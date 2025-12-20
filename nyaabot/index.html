@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nyaa Cloud Downloader</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+            padding: 20px;
+        }
+        input, button {
+            width: 100%; padding: 12px; margin-bottom: 10px;
+            border-radius: 8px; border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: #fff; border: none; font-weight: bold; cursor: pointer;
+        }
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            padding: 15px; border-radius: 10px; margin-top: 10px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .title { font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+        .meta { font-size: 12px; color: #888; margin-bottom: 10px; }
+        
+        /* Gaya Progress Bar */
+        .progress-container {
+            width: 100%; background-color: #ddd; 
+            border-radius: 5px; margin-top: 10px; height: 10px;
+            display: none; /* Hidden by default */
+        }
+        .progress-bar {
+            height: 100%; width: 0%; 
+            background-color: #4caf50; border-radius: 5px;
+            transition: width 0.5s;
+        }
+        .status-text { font-size: 11px; margin-top: 5px; color: #666; font-style: italic; }
+
+        .btn-download { background-color: #e67e22; }
+        .btn-save { background-color: #27ae60; display: none; text-decoration: none; text-align: center; display: block; padding: 10px; border-radius: 8px; color: white; margin-top: 10px;}
+    </style>
+</head>
+<body>
+    <h2 style="text-align: center;">☁️ Cloud Downloader</h2>
+    
+    <input type="text" id="searchInput" placeholder="Cari Anime...">
+    <button onclick="searchNyaa()">🔍 Cari</button>
+
+    <div id="results"></div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); 
+
+        // Fungsi Pencarian
+        async function searchNyaa() {
+            const query = document.getElementById('searchInput').value;
+            const resDiv = document.getElementById('results');
+            resDiv.innerHTML = '<p style="text-align:center">Mencari...</p>';
+
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                resDiv.innerHTML = '';
+                if (!data || data.length === 0) {
+                    resDiv.innerHTML = '<p>Tidak ditemukan.</p>'; return;
+                }
+
+                data.forEach(item => {
+                    // ID unik untuk setiap card biar ga tabrakan progress bar-nya
+                    // Kita pakai hash sederhana dari nama file
+                    const cardId = 'card_' + Math.random().toString(36).substr(2, 9);
+                    
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <div class="title">${item.Name}</div>
+                        <div class="meta">Size: ${item.Size} | S: ${item.Seeders}</div>
+                        
+                        <button id="btn_${cardId}" class="btn-download" 
+                            onclick="startServerDownload('${item.Link}', '${cardId}')">
+                            ⬇️ Download ke Server
+                        </button>
+
+                        <div id="progCont_${cardId}" class="progress-container" style="display:none;">
+                            <div id="bar_${cardId}" class="progress-bar"></div>
+                        </div>
+                        <div id="status_${cardId}" class="status-text"></div>
+
+                        <a id="save_${cardId}" class="btn-save" style="display:none;" target="_blank">
+                            📂 Simpan Video
+                        </a>
+                    `;
+                    resDiv.appendChild(card);
+                });
+            } catch (e) { resDiv.innerHTML = 'Error: ' + e.message; }
+        }
+
+        // Fungsi Mulai Download
+        async function startServerDownload(url, cardId) {
+            const btn = document.getElementById(`btn_${cardId}`);
+            const progCont = document.getElementById(`progCont_${cardId}`);
+            const statusTxt = document.getElementById(`status_${cardId}`);
+            
+            // UI Update
+            btn.style.display = 'none'; // Sembunyikan tombol download
+            progCont.style.display = 'block'; // Munculkan bar
+            statusTxt.innerText = "⏳ Menghubungi server...";
+
+            try {
+                // Request ke Go Backend
+                const res = await fetch(`/api/start_download?url=${encodeURIComponent(url)}`);
+                const data = await res.json();
+                const downloadID = data.id;
+
+                // Mulai Monitoring Progress
+                trackProgress(downloadID, cardId);
+
+            } catch (e) {
+                statusTxt.innerText = "❌ Gagal request: " + e.message;
+                btn.style.display = 'block';
+            }
+        }
+
+        // Fungsi Monitoring (Polling setiap 1 detik)
+        function trackProgress(downloadID, cardId) {
+            const bar = document.getElementById(`bar_${cardId}`);
+            const statusTxt = document.getElementById(`status_${cardId}`);
+            const saveBtn = document.getElementById(`save_${cardId}`);
+            const progCont = document.getElementById(`progCont_${cardId}`);
+
+            const interval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/api/progress?id=${downloadID}`);
+                    if(res.status !== 200) return; // Skip jika error network sesaat
+                    
+                    const data = await res.json();
+
+                    // Update Bar
+                    bar.style.width = data.progress + "%";
+                    statusTxt.innerText = `⏬ ${data.status} (${data.progress.toFixed(1)}%)`;
+
+                    if (data.status === "error") {
+                        clearInterval(interval);
+                        statusTxt.innerText = "❌ Error: " + data.error_msg;
+                        statusTxt.style.color = "red";
+                    }
+
+                    if (data.status === "done") {
+                        clearInterval(interval);
+                        statusTxt.innerText = "✅ Selesai! Klik tombol di bawah.";
+                        progCont.style.display = 'none';
+                        
+                        // Tampilkan tombol ambil file
+                        saveBtn.href = data.file_url;
+                        saveBtn.style.display = 'block';
+                    }
+
+                } catch (e) {
+                    console.log("Polling error", e);
+                }
+            }, 1000); // Cek tiap 1 detik
+        }
+    </script>
+</body>
+</html>
